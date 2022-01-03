@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# vim:fileencoding=utf-8
+import string
+from calibre import strftime
+from calibre.web.feeds.news import BasicNewsRecipe
+from calibre.ebooks.BeautifulSoup import BeautifulSoup
+
+class AnalyseUndKritik(BasicNewsRecipe):
+    title          = 'Analyse & Kritik'
+    language = 'de'
+    description = u'Zeitung für linke Debatte & Praxis'
+    publisher = u'Verein für Politische Bildung, Analyse & Kritik e.V.'
+    category = 'politics, Germany'
+
+    auto_cleanup   = True
+    needs_subscription = True
+    remove_tags = [dict(name='div', attrs={'class': 'wp-block-quote-container'}),
+                   dict(name='section', attrs={'class': 'wp-block-ak-banner'}),
+                   dict(name='svg', attrs={'class': 'wp-block-paragraph__end-icon'}),
+                   dict(name='figure', attrs={'class': 'wp-block-embed'})]
+    
+    def get_browser(self):
+        br = BasicNewsRecipe.get_browser(self)
+        if self.username is not None and self.password is not None:
+            br.open('https://www.akweb.de/login/')
+            br.select_form(action='https://www.akweb.de/wp-login.php')
+            br['log']   = self.username
+            br['pwd'] = self.password
+            br.submit()
+        return br
+    
+    def parse_index(self):
+        issues = self.index_to_soup('https://www.akweb.de/ausgaben/')
+        issue = issues.find('li', attrs={'class': 'issues__issue'})
+        if issue:
+            issue_url = issue.find('a', href=True)['href']
+            issue_url_split = issue_url.split('/')
+            if len(issue_url_split) >= 5:
+                issue_number = issue_url_split[4]
+                self.title = self.title + ' ' + issue_number
+            return self.parse_issue(issue_url)
+
+    def parse_issue(self, issue_url):
+        soup = self.index_to_soup(issue_url)
+
+        def feed_title(div):
+            return ''.join(div.findAll(text=True, recursive=False)).strip()
+
+        articles = {}
+        key = None
+        ans = []
+        for el in soup.findAll(True,
+             attrs={'class':['column',  'wp-block-ak-topic-container__title', 'article-item']}):
+
+             if 'column' in el['class'] or 'wp-block-ak-topic-container__title' in el['class']:
+                 key = string.capwords(feed_title(el))
+                 articles[key] = []
+                 ans.append(key)
+
+             elif 'article-item' in el['class']:
+                 a = el.find('a', href=True)
+                 if not a:
+                     continue
+                 url = a['href']
+                 title = self.tag_to_string(a, use_alt=False).strip()
+                 description = ''
+                 pubdate = strftime('%a, %d %b')
+                 summary = el.find(True, attrs={'class':'wp-block-ak-unterzeile'})
+                 if summary:
+                     description = self.tag_to_string(summary, use_alt=False)
+
+                 feed = key if key is not None else 'Uncategorized'
+                 if feed not in articles:
+                     articles[feed] = []
+                     
+                 articles[feed].append(
+                        dict(title=title, url=url, date=pubdate,
+                                description=description,
+                                content=''))
+        ans = [(key, articles[key]) for key in articles]
+
+        return ans
