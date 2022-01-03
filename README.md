@@ -1,6 +1,6 @@
 # Calibre Recipe für "Analyse & Kritik"
 
-Dies ist ein "Recipe" für die Kovertierung der aktuellen Ausgabe der Zeitung [Analyse & Kritik](https://www.akweb.de) in ein Ebook. Es muss zusammen mit der "Nachrichten abrufen"-Funktion von [Calibre](https://calibre-ebook.com) verwendet werden. Du benötigst ein Online-Abo der ak um dieses Skript verwenden zu können.
+Dies ist ein "Recipe" für die Konvertierung der aktuellen Ausgabe der Zeitung [Analyse & Kritik](https://www.akweb.de) in ein Ebook. Es muss zusammen mit der "Nachrichten abrufen"-Funktion von [Calibre](https://calibre-ebook.com) verwendet werden. Du benötigst ein Online-Abo der ak um dieses Skript verwenden zu können.
 
 ## Installation
 
