@@ -18,6 +18,12 @@ class AnalyseUndKritik(BasicNewsRecipe):
                    dict(name='section', attrs={'class': 'wp-block-ak-banner'}),
                    dict(name='svg', attrs={'class': 'wp-block-paragraph__end-icon'}),
                    dict(name='figure', attrs={'class': 'wp-block-embed'})]
+    recipe_specific_options = {
+      'edition': {
+        'short': 'The issue to download',
+        'long':  'Specify an edition (e.g. "708")',
+      }
+    }
     
     def get_browser(self):
         br = BasicNewsRecipe.get_browser(self)
@@ -30,6 +36,9 @@ class AnalyseUndKritik(BasicNewsRecipe):
         return br
     
     def parse_index(self):
+        if "edition" in self.recipe_specific_options:
+            return self.parse_issue(f'https://www.akweb.de/ausgaben/{self.recipe_specific_options["edition"]}/')
+
         issues = self.index_to_soup('https://www.akweb.de/ausgaben/')
         issue = issues.find('li', attrs={'class': 'issues__issue'})
         if issue:
